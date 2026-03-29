@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus Navigation System</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="minimap.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+    <header class="sticker-header" id="zone-header">
+        <div class="header-content">
+            <h1>Smart Campus Navigation</h1>
+            <p id="todayDate"></p>
+        </div>
+        <div class="stars">⭐ ⭐ ⭐ ⭐ ⭐</div>
+    </header>
+
+    <section class="top-widgets" id="zone-stats">
+        <article class="mini-card yellow">
+            <div class="icon-circle">📍</div>
+            <div>
+                <span class="label">LOCATIONS</span>
+                <h2 id="locCount">0</h2>
+            </div>
+        </article>
+        <article class="mini-card pink">
+            <div class="icon-circle">🛣️</div>
+            <div>
+                <span class="label">PATHS</span>
+                <h2 id="edgeCount">0</h2>
+            </div>
+        </article>
+        <article class="mini-card purple">
+            <div class="icon-circle">🧩</div>
+            <div>
+                <span class="label">COMPONENTS</span>
+                <h2 id="componentCount">1</h2>
+            </div>
+        </article>
+    </section>
+
+    <main class="main-grid">
+        <section class="card map-view" id="zone-chart">
+            <h3>Campus Graph Overview</h3>
+            <div class="split-view">
+                <div>
+                    <h4>Locations (Vertices)</h4>
+                    <div id="locationList" class="terminal-view"></div>
+                </div>
+                <div>
+                    <h4>Connections (Edges)</h4>
+                    <div id="mapData" class="terminal-view"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card nav-tool">
+            <h3>Menu Panel</h3>
+            <div class="menu-list">
+                <p><strong>1)</strong> Display Locations and Connections</p>
+                <p><strong>2)</strong> Check Connectivity</p>
+                <p><strong>3)</strong> Find Shortest Path</p>
+                <p><strong>4)</strong> Add New Connection</p>
+            </div>
+
+            <div class="nav-zone" id="zone-progress">
+                <h4>Check Connectivity</h4>
+                <div class="input-set">
+                    <select id="connA"></select>
+                    <select id="connB"></select>
+                    <button id="checkBtn" class="small-btn pink-btn">CHECK LINK</button>
+                </div>
+                <div id="connectDisplay"></div>
+            </div>
+
+            <div class="nav-zone" id="zone-tasks">
+                <h4>Find Shortest Path</h4>
+                <div class="input-set">
+                    <select id="startSelect"></select>
+                    <div class="arrow">⬇</div>
+                    <select id="endSelect"></select>
+                    <button id="goBtn" class="kawaii-btn">START NAVIGATION</button>
+                </div>
+                <div id="pathDisplay"></div>
+            </div>
+        </section>
+
+        <section class="card editor" id="zone-activity">
+            <h3>Add Connection</h3>
+            <div class="editor-box">
+                <input type="text" id="nodeA" placeholder="Location A">
+                <input type="text" id="nodeB" placeholder="Location B">
+                <input type="number" id="weightInput" placeholder="Distance (meters)" min="1">
+                <button id="addBtn" class="small-btn">CONNECT LOCATIONS</button>
+            </div>
+            <div class="save-load-row">
+                <button type="button" id="saveGraphBtn" class="small-btn save-load-btn">SAVE GRAPH</button>
+                <button type="button" id="loadGraphBtn" class="small-btn save-load-btn">LOAD GRAPH</button>
+            </div>
+            <p class="save-load-hint">Graph is auto-saved when you add a connection. Load brings back your last saved campus.</p>
+
+            <h4 class="delete-location-heading">Remove location</h4>
+            <div class="delete-location-box">
+                <select id="deleteLocationSelect"></select>
+                <button type="button" id="deleteLocationBtn" class="small-btn delete-location-btn">DELETE LOCATION</button>
+            </div>
+            <p class="delete-location-hint">Removes this place and every path connected to it.</p>
+
+            <div id="addStatus"></div>
+        </section>
+    </main>
+</div>
+
+<!-- Campus Mini-Map Overlay -->
+<button type="button" id="minimap-fab" class="minimap-fab" aria-label="Open campus navigation map" title="Open map">
+    <span class="minimap-fab-pulse" aria-hidden="true"></span>
+    <span class="minimap-fab-inner">
+        <span class="minimap-fab-icon" aria-hidden="true">
+            <svg class="minimap-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+                <line x1="9" y1="3" x2="9" y2="18"/>
+                <line x1="15" y1="6" x2="15" y2="21"/>
+            </svg>
+        </span>
+        <span class="minimap-fab-label">MAP</span>
+    </span>
+</button>
+
+<div id="minimap-overlay" class="minimap-overlay minimap-overlay--hidden" aria-hidden="true">
+    <div class="minimap-backdrop" id="minimap-backdrop" aria-hidden="true"></div>
+    <div class="minimap-modal" role="dialog" aria-modal="true" aria-labelledby="minimap-title">
+        <div class="minimap-modal-head">
+            <div class="minimap-modal-title-wrap">
+                <span class="minimap-compass" aria-hidden="true">🧭</span>
+                <div>
+                    <h2 id="minimap-title" class="minimap-title">CAMPUS MAP</h2>
+                    <p class="minimap-sub">Locations & paths — tap a place to set start, then press “START NAV”.</p>
+                </div>
+            </div>
+            <button type="button" id="minimap-close" class="minimap-close" aria-label="Close map">✕</button>
+        </div>
+
+        <div class="minimap-map-wrap">
+            <p id="minimap-trip-line" class="minimap-map-hint minimimap-trip-line" aria-live="polite"></p>
+            <div class="minimap-board">
+                <div class="minimap-board-frame" id="minimap-board-frame">
+                    <div class="minimap-grid-bg" aria-hidden="true"></div>
+                    <svg id="minimap-edges" class="minimap-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+                    <div id="minimap-zones" class="minimap-zones"></div>
+                    <div id="minimap-player" class="minimap-player" aria-hidden="true"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="minimap-legend">
+            <div class="minimap-legend-box minimap-legend-box--green">
+                <div class="minimap-legend-row">
+                    <span class="minimap-dot-green"></span>
+                    <strong>YOU ARE HERE</strong>
+                </div>
+                <p class="minimap-legend-text">Green dot shows your current location.</p>
+            </div>
+            <div class="minimap-legend-box minimap-legend-box--blue">
+                <div class="minimap-legend-row">
+                    <span class="minimap-legend-emoji" aria-hidden="true">🚶</span>
+                    <strong>WALK TIME</strong>
+                </div>
+                <p class="minimap-legend-text">Animation time scales by meters.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="script.js"></script>
+<script src="minimap.js"></script>
+</body>
+</html>
